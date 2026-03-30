@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skills Marketplace — Solana</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@solana/web3.js@1.95.3/lib/index.iife.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;color:#e0e0e0;font-family:'DM Sans',sans-serif;display:flex;min-height:100vh}
+/* SIDEBAR */
+.sidebar{width:220px;background:#0f0f0f;border-right:1px solid #1a1a1a;padding:24px 0;display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:22px;color:#D4AF37;padding:0 20px 24px;border-bottom:1px solid #1a1a1a;letter-spacing:1px}
+.logo span{color:#9945FF}
+.nav{padding:16px 0;flex:1}
+.nav a{display:flex;align-items:center;gap:10px;padding:10px 20px;color:#888;text-decoration:none;font-size:13px;font-weight:500;transition:all .2s;cursor:pointer;border-left:3px solid transparent}
+.nav a:hover,.nav a.active{color:#e0e0e0;background:#161616;border-left-color:#9945FF}
+.nav a span{font-size:16px}
+.wallet-section{padding:16px 20px;border-top:1px solid #1a1a1a}
+#connectBtn{width:100%;padding:10px;background:linear-gradient(135deg,#9945FF,#14F195);border:none;border-radius:8px;color:#0a0a0a;font-weight:700;font-size:13px;cursor:pointer;transition:opacity .2s}
+#connectBtn:hover{opacity:.85}
+.wallet-info{display:none;font-size:11px;color:#888;font-family:'DM Mono',monospace}
+.wallet-info .addr{color:#14F195;font-size:10px;word-break:break-all;margin-top:4px}
+.wallet-info .bal{color:#9945FF;font-size:13px;font-weight:600;margin-top:6px}
+/* MAIN */
+.main{flex:1;padding:32px;overflow-y:auto}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
+.topbar h1{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;color:#fff}
+.topbar h1 span{color:#9945FF}
+#listSkillBtn{padding:10px 20px;background:#9945FF;border:none;border-radius:8px;color:#fff;font-weight:600;font-size:13px;cursor:pointer;transition:background .2s}
+#listSkillBtn:hover{background:#7a35cc}
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.stat{background:#111;border:1px solid #1e1e1e;border-radius:10px;padding:16px}
+.stat-val{font-family:'DM Mono',monospace;font-size:22px;font-weight:600;color:#9945FF}
+.stat-lbl{font-size:11px;color:#666;margin-top:4px;text-transform:uppercase;letter-spacing:1px}
+/* FILTERS */
+.filters{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+.filters input,.filters select{background:#111;border:1px solid #222;border-radius:8px;padding:9px 14px;color:#e0e0e0;font-size:13px;font-family:'DM Sans',sans-serif}
+.filters input{flex:1;min-width:200px}
+.filters input::placeholder{color:#444}
+.filters select option{background:#111}
+/* GRID */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
+.card{background:#111;border:1px solid #1e1e1e;border-radius:12px;padding:20px;cursor:pointer;transition:all .2s;position:relative}
+.card:hover{border-color:#9945FF;transform:translateY(-2px);box-shadow:0 8px 24px rgba(153,69,255,.15)}
+.card-cat{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#9945FF;font-weight:600;margin-bottom:8px}
+.card-title{font-size:15px;font-weight:600;color:#fff;margin-bottom:6px;line-height:1.3}
+.card-desc{font-size:12px;color:#666;line-height:1.5;margin-bottom:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-footer{display:flex;justify-content:space-between;align-items:center}
+.card-price{font-family:'DM Mono',monospace;font-size:16px;font-weight:600;color:#14F195}
+.card-seller{font-size:11px;color:#555;font-family:'DM Mono',monospace}
+.card-badge{position:absolute;top:12px;right:12px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;padding:3px 8px;font-size:10px;color:#888}
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:#111;border:1px solid #2a2a2a;border-radius:16px;padding:28px;width:480px;max-width:95vw;max-height:90vh;overflow-y:auto}
+.modal h2{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;margin-bottom:20px;color:#fff}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:12px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.form-group input,.form-group textarea,.form-group select{width:100%;background:#0a0a0a;border:1px solid #222;border-radius:8px;padding:10px 14px;color:#e0e0e0;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border .2s}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:#9945FF}
+.form-group textarea{height:80px;resize:vertical}
+.form-group select option{background:#111}
+.modal-actions{display:flex;gap:12px;margin-top:20px}
+.btn-primary{flex:1;padding:12px;background:linear-gradient(135deg,#9945FF,#14F195);border:none;border-radius:8px;color:#0a0a0a;font-weight:700;font-size:14px;cursor:pointer}
+.btn-secondary{padding:12px 20px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;color:#888;font-size:14px;cursor:pointer}
+.btn-primary:hover{opacity:.9}
+/* DETAIL MODAL */
+.detail-price{font-family:'DM Mono',monospace;font-size:32px;font-weight:700;color:#14F195;margin:16px 0}
+.detail-cat{font-size:11px;color:#9945FF;text-transform:uppercase;letter-spacing:1px;font-weight:600}
+.detail-desc{font-size:14px;color:#888;line-height:1.6;margin:12px 0 20px}
+.detail-seller{background:#0a0a0a;border:1px solid #1e1e1e;border-radius:8px;padding:12px;font-family:'DM Mono',monospace;font-size:11px;color:#555;margin-bottom:20px}
+.detail-seller span{color:#14F195;display:block;margin-top:4px;word-break:break-all}
+.tag{display:inline-block;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:4px;padding:3px 8px;font-size:11px;color:#888;margin:2px}
+/* STATUS */
+.status-bar{display:none;background:#161616;border:1px solid #2a2a2a;border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:#888}
+.status-bar.show{display:block}
+.status-bar.success{border-color:#14F195;color:#14F195}
+.status-bar.error{border-color:#ff4444;color:#ff4444}
+/* NETWORK */
+.network-badge{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;padding:4px 10px;font-size:11px;color:#9945FF;font-family:'DM Mono',monospace;margin-bottom:16px;display:inline-block}
+.empty{text-align:center;padding:60px;color:#444;font-size:14px}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="logo">ANGEL<span>SKILLS</span></div>
+  <nav class="nav">
+    <a class="active" onclick="showTab('all')"><span>🛒</span> Marketplace</a>
+    <a onclick="showTab('mine')"><span>⭐</span> Mes Skills</a>
+    <a onclick="showTab('bought')"><span>✅</span> Mes Achats</a>
+    <a href="index.html"><span>↩</span> CRM</a>
+  </nav>
+  <div class="wallet-section">
+    <button id="connectBtn" onclick="connectWallet()">Connecter Phantom</button>
+    <div class="wallet-info" id="walletInfo">
+      <div>Connecté</div>
+      <div class="addr" id="walletAddr"></div>
+      <div class="bal" id="walletBal"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <h1>SKILLS <span>MARKETPLACE</span></h1>
+    <button id="listSkillBtn" onclick="openListModal()">+ Lister un Skill</button>
+  </div>
+  <div class="network-badge" id="networkBadge">🟡 Devnet</div>
+  <div class="status-bar" id="statusBar"></div>
+  <div class="stats">
+    <div class="stat"><div class="stat-val" id="statTotal">0</div><div class="stat-lbl">Skills Listés</div></div>
+    <div class="stat"><div class="stat-val" id="statVol">0 SOL</div><div class="stat-lbl">Volume Total</div></div>
+    <div class="stat"><div class="stat-val" id="statSellers">0</div><div class="stat-lbl">Vendeurs</div></div>
+    <div class="stat"><div class="stat-val" id="statBought">0</div><div class="stat-lbl">Mes Achats</div></div>
+  </div>
+  <div class="filters">
+    <input type="text" id="searchInput" placeholder="Rechercher un skill..." oninput="renderGrid()">
+    <select id="catFilter" onchange="renderGrid()">
+      <option value="">Toutes catégories</option>
+      <option>Smart Contracts</option>
+      <option>Frontend Dev</option>
+      <option>Design</option>
+      <option>Marketing</option>
+      <option>Trading</option>
+      <option>DeFi</option>
+      <option>NFT</option>
+      <option>Sécurité</option>
+      <option>Rédaction</option>
+      <option>Data</option>
+    </select>
+    <select id="sortFilter" onchange="renderGrid()">
+      <option value="date">Plus récents</option>
+      <option value="price_asc">Prix ↑</option>
+      <option value="price_desc">Prix ↓</option>
+    </select>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<!-- LIST SKILL MODAL -->
+<div class="overlay" id="listOverlay">
+  <div class="modal">
+    <h2>Lister un Skill</h2>
+    <div class="form-group">
+      <label>Titre</label>
+      <input id="f_title" type="text" placeholder="Ex: Audit Smart Contract Solana">
+    </div>
+    <div class="form-group">
+      <label>Catégorie</label>
+      <select id="f_cat">
+        <option>Smart Contracts</option>
+        <option>Frontend Dev</option>
+        <option>Design</option>
+        <option>Marketing</option>
+        <option>Trading</option>
+        <option>DeFi</option>
+        <option>NFT</option>
+        <option>Sécurité</option>
+        <option>Rédaction</option>
+        <option>Data</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="f_desc" placeholder="Décris ton skill en détail..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Prix (SOL)</label>
+      <input id="f_price" type="number" step="0.01" min="0.001" placeholder="0.5">
+    </div>
+    <div class="form-group">
+      <label>Tags (séparés par virgule)</label>
+      <input id="f_tags" type="text" placeholder="anchor, rust, defi">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeListModal()">Annuler</button>
+      <button class="btn-primary" onclick="listSkill()">Publier</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="overlay" id="detailOverlay">
+  <div class="modal">
+    <div class="detail-cat" id="d_cat"></div>
+    <h2 id="d_title"></h2>
+    <div class="detail-price" id="d_price"></div>
+    <div class="detail-desc" id="d_desc"></div>
+    <div class="detail-seller">
+      Vendeur<span id="d_seller"></span>
+    </div>
+    <div id="d_tags" style="margin-bottom:20px"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeDetail()">Fermer</button>
+      <button class="btn-primary" id="buyBtn" onclick="buySkill()">Acheter — <span id="d_price2"></span> SOL</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────
+let wallet = null;
+let connection = null;
+let currentSkillId = null;
+let activeTab = 'all';
+
+const NETWORK = 'https://api.devnet.solana.com';
+const CATS_EMOJI = {
+  'Smart Contracts':'🔒','Frontend Dev':'💻','Design':'🎨',
+  'Marketing':'📣','Trading':'📈','DeFi':'🏦','NFT':'🖼️',
+  'Sécurité':'🛡️','Rédaction':'✍️','Data':'📊'
+};
+
+function getSkills() {
+  try { return JSON.parse(localStorage.getItem('skills_mkt') || '[]'); } catch { return []; }
+}
+function saveSkills(s) { localStorage.setItem('skills_mkt', JSON.stringify(s)); }
+function getBought() {
+  try { return JSON.parse(localStorage.getItem('skills_bought') || '[]'); } catch { return []; }
+}
+function saveBought(b) { localStorage.setItem('skills_bought', JSON.stringify(b)); }
+
+// ── WALLET ─────────────────────────────────────────────
+async function connectWallet() {
+  try {
+    if (!window.solana) { showStatus('Phantom non détecté. Installe l\'extension Phantom!', 'error'); return; }
+    connection = new solanaWeb3.Connection(NETWORK, 'confirmed');
+    await window.solana.connect();
+    wallet = window.solana;
+    const addr = wallet.publicKey.toString();
+    document.getElementById('connectBtn').style.display = 'none';
+    const wi = document.getElementById('walletInfo');
+    wi.style.display = 'block';
+    document.getElementById('walletAddr').textContent = addr.slice(0,6)+'...'+addr.slice(-4);
+    await refreshBalance();
+    showStatus('Wallet connecté! Réseau: Devnet', 'success');
+    updateStats();
+  } catch(e) {
+    showStatus('Connexion refusée: ' + e.message, 'error');
+  }
+}
+
+async function refreshBalance() {
+  if (!wallet || !connection) return;
+  try {
+    const bal = await connection.getBalance(wallet.publicKey);
+    document.getElementById('walletBal').textContent = (bal / solanaWeb3.LAMPORTS_PER_SOL).toFixed(4) + ' SOL';
+  } catch {}
+}
+
+// ── UI ─────────────────────────────────────────────────
+function showTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.nav a').forEach((a,i) => a.classList.remove('active'));
+  document.querySelectorAll('.nav a')[['all','mine','bought'].indexOf(tab)]?.classList.add('active');
+  renderGrid();
+}
+
+function showStatus(msg, type='') {
+  const bar = document.getElementById('statusBar');
+  bar.textContent = msg;
+  bar.className = 'status-bar show ' + type;
+  setTimeout(() => bar.classList.remove('show'), 5000);
+}
+
+function updateStats() {
+  const skills = getSkills();
+  const bought = getBought();
+  const sellers = [...new Set(skills.map(s => s.seller))];
+  const vol = bought.reduce((a, b) => a + b.price, 0);
+  document.getElementById('statTotal').textContent = skills.length;
+  document.getElementById('statVol').textContent = vol.toFixed(2) + ' SOL';
+  document.getElementById('statSellers').textContent = sellers.length;
+  document.getElementById('statBought').textContent = bought.length;
+}
+
+function renderGrid() {
+  const skills = getSkills();
+  const bought = getBought().map(b => b.id);
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const cat = document.getElementById('catFilter').value;
+  const sort = document.getElementById('sortFilter').value;
+  const addr = wallet?.publicKey?.toString();
+
+  let list = skills.filter(s => {
+    if (activeTab === 'mine' && s.seller !== addr) return false;
+    if (activeTab === 'bought' && !bought.includes(s.id)) return false;
+    if (cat && s.cat !== cat) return false;
+    if (search && !s.title.toLowerCase().includes(search) && !s.desc.toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  if (sort === 'price_asc') list.sort((a,b) => a.price - b.price);
+  else if (sort === 'price_desc') list.sort((a,b) => b.price - a.price);
+  else list.sort((a,b) => b.id - a.id);
+
+  const grid = document.getElementById('grid');
+  if (!list.length) {
+    grid.innerHTML = '<div class="empty">Aucun skill trouvé 👀</div>';
+    return;
+  }
+
+  grid.innerHTML = list.map(s => {
+    const isBought = bought.includes(s.id);
+    const isMine = s.seller === addr;
+    const emoji = CATS_EMOJI[s.cat] || '🔧';
+    return `<div class="card" onclick="openDetail(${s.id})">
+      <div class="card-cat">${emoji} ${s.cat}</div>
+      <div class="card-title">${s.title}</div>
+      <div class="card-desc">${s.desc}</div>
+      <div class="card-footer">
+        <div class="card-price">${s.price} SOL</div>
+        <div class="card-seller">${s.seller.slice(0,4)}...${s.seller.slice(-4)}</div>
+      </div>
+      ${isBought ? '<div class="card-badge">✅ Acheté</div>' : ''}
+      ${isMine ? '<div class="card-badge">⭐ Le tien</div>' : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── LIST SKILL ─────────────────────────────────────────
+function openListModal() {
+  if (!wallet) { showStatus('Connecte ton wallet d\'abord!', 'error'); return; }
+  document.getElementById('listOverlay').classList.add('open');
+}
+function closeListModal() { document.getElementById('listOverlay').classList.remove('open'); }
+
+function listSkill() {
+  const title = document.getElementById('f_title').value.trim();
+  const cat = document.getElementById('f_cat').value;
+  const desc = document.getElementById('f_desc').value.trim();
+  const price = parseFloat(document.getElementById('f_price').value);
+  const tags = document.getElementById('f_tags').value.split(',').map(t => t.trim()).filter(Boolean);
+
+  if (!title || !desc || !price || price <= 0) {
+    showStatus('Remplis tous les champs!', 'error'); return;
+  }
+
+  const skills = getSkills();
+  skills.push({ id: Date.now(), title, cat, desc, price, tags, seller: wallet.publicKey.toString(), date: new Date().toISOString() });
+  saveSkills(skills);
+  closeListModal();
+  document.getElementById('f_title').value = '';
+  document.getElementById('f_desc').value = '';
+  document.getElementById('f_price').value = '';
+  document.getElementById('f_tags').value = '';
+  renderGrid();
+  updateStats();
+  showStatus('Skill publié avec succès! ✅', 'success');
+}
+
+// ── DETAIL + BUY ───────────────────────────────────────
+function openDetail(id) {
+  const skill = getSkills().find(s => s.id === id);
+  if (!skill) return;
+  currentSkillId = id;
+  const bought = getBought().map(b => b.id);
+  const isMine = skill.seller === wallet?.publicKey?.toString();
+  const isBought = bought.includes(id);
+
+  document.getElementById('d_cat').textContent = (CATS_EMOJI[skill.cat] || '🔧') + ' ' + skill.cat;
+  document.getElementById('d_title').textContent = skill.title;
+  document.getElementById('d_price').textContent = skill.price + ' SOL';
+  document.getElementById('d_price2').textContent = skill.price;
+  document.getElementById('d_desc').textContent = skill.desc;
+  document.getElementById('d_seller').textContent = skill.seller;
+  document.getElementById('d_tags').innerHTML = skill.tags.map(t => `<span class="tag">#${t}</span>`).join('');
+
+  const buyBtn = document.getElementById('buyBtn');
+  if (isMine) { buyBtn.textContent = 'Ton propre skill'; buyBtn.disabled = true; }
+  else if (isBought) { buyBtn.textContent = '✅ Déjà acheté'; buyBtn.disabled = true; }
+  else { buyBtn.disabled = false; buyBtn.innerHTML = `Acheter — <span id="d_price2">${skill.price}</span> SOL`; }
+
+  document.getElementById('detailOverlay').classList.add('open');
+}
+function closeDetail() { document.getElementById('detailOverlay').classList.remove('open'); }
+
+async function buySkill() {
+  if (!wallet || !connection) { showStatus('Connecte ton wallet!', 'error'); return; }
+  const skill = getSkills().find(s => s.id === currentSkillId);
+  if (!skill) return;
+
+  const buyBtn = document.getElementById('buyBtn');
+  buyBtn.textContent = 'Transaction en cours...';
+  buyBtn.disabled = true;
+
+  try {
+    const lamports = Math.round(skill.price * solanaWeb3.LAMPORTS_PER_SOL);
+    const tx = new solanaWeb3.Transaction().add(
+      solanaWeb3.SystemProgram.transfer({
+        fromPubkey: wallet.publicKey,
+        toPubkey: new solanaWeb3.PublicKey(skill.seller),
+        lamports
+      })
+    );
+    const { blockhash } = await connection.getLatestBlockhash();
+    tx.recentBlockhash = blockhash;
+    tx.feePayer = wallet.publicKey;
+
+    const signed = await wallet.signTransaction(tx);
+    const txId = await connection.sendRawTransaction(signed.serialize());
+    await connection.confirmTransaction(txId);
+
+    const bought = getBought();
+    bought.push({ id: skill.id, txId, price: skill.price, date: new Date().toISOString() });
+    saveBought(bought);
+
+    closeDetail();
+    renderGrid();
+    updateStats();
+    refreshBalance();
+    showStatus(`Achat réussi! TX: ${txId.slice(0,20)}...`, 'success');
+  } catch(e) {
+    buyBtn.textContent = 'Réessayer';
+    buyBtn.disabled = false;
+    showStatus('Erreur: ' + e.message, 'error');
+  }
+}
+
+// ── SAMPLE DATA ────────────────────────────────────────
+function seedSampleData() {
+  if (getSkills().length > 0) return;
+  const demo = [
+    { id: 1, title: 'Audit Smart Contract Solana', cat: 'Sécurité', desc: 'Audit complet de ton programme Anchor. Rapport détaillé des vulnérabilités avec recommandations.', price: 2.5, tags: ['anchor','rust','audit'], seller: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU', date: '2026-03-01T10:00:00Z' },
+    { id: 2, title: 'Landing Page Web3 Next.js', cat: 'Frontend Dev', desc: 'Landing page moderne pour ton projet Web3 avec wallet connect et animations custom.', price: 1.2, tags: ['nextjs','react','web3'], seller: '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM', date: '2026-03-10T10:00:00Z' },
+    { id: 3, title: 'Bot de Trading Automatique', cat: 'Trading', desc: 'Bot de trading sur Jupiter DEX. Stratégie DCA + grid trading. Code livré + setup.', price: 3.0, tags: ['jupiter','dex','trading'], seller: 'FwENLkAFMhMwkBQJTy7bQhRRXxLknH7FZbSFJV6UMgQk', date: '2026-03-15T10:00:00Z' },
+    { id: 4, title: 'Collection NFT 10k — Design', cat: 'NFT', desc: '10 000 NFTs générés avec traits uniques. Livraison des assets + métadonnées.', price: 5.0, tags: ['nft','generative','design'], seller: '3FZbgi29cpjq2GjdwV8eyHuJJnkLtktZc5oDezEBTn87', date: '2026-03-20T10:00:00Z' },
+    { id: 5, title: 'Stratégie Marketing Web3', cat: 'Marketing', desc: 'Plan marketing complet: Twitter, Discord, KOL outreach. Testé sur 5 projets Solana.', price: 0.8, tags: ['marketing','twitter','discord'], seller: 'BrEqc6zHVR99qZmGkBpLXWDrTFHXvfY8JDpfXBMVNW5G', date: '2026-03-22T10:00:00Z' },
+    { id: 6, title: 'Pool de Liquidité Raydium', cat: 'DeFi', desc: 'Setup complet d\'une pool de liquidité sur Raydium. Include stratégie de range et gestion des fees.', price: 1.5, tags: ['raydium','defi','liquidity'], seller: 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJe1b55', date: '2026-03-25T10:00:00Z' },
+  ];
+  saveSkills(demo);
+}
+
+// ── INIT ───────────────────────────────────────────────
+seedSampleData();
+renderGrid();
+updateStats();
+
+// Close modals on overlay click
+document.getElementById('listOverlay').addEventListener('click', function(e) { if(e.target===this) closeListModal(); });
+document.getElementById('detailOverlay').addEventListener('click', function(e) { if(e.target===this) closeDetail(); });
+</script>
+</body>
+</html>
