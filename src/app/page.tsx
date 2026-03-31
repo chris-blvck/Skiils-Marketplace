@@ -11,6 +11,12 @@ import { ListModal }        from '@/components/ListModal'
 import { DetailModal }      from '@/components/DetailModal'
 import { ToastContainer }   from '@/components/Toast'
 
+const MOBILE_TABS: { id: Tab; icon: string; label: string }[] = [
+  { id: 'all',       icon: '✦',  label: 'Market'    },
+  { id: 'mine',      icon: '📦', label: 'Store'     },
+  { id: 'purchases', icon: '🛒', label: 'Purchases' },
+]
+
 export default function HomePage() {
   const wallet  = useWallet()
   const store   = useSkills()
@@ -23,19 +29,17 @@ export default function HomePage() {
   const [selected, setSelected] = useState<Skill | null>(null)
   const [toasts,   setToasts]   = useState<Toast[]>([])
 
-  /* ── Toast ── */
   const toast = useCallback((message: string, type: Toast['type'] = 'info') => {
     const id = Date.now()
     setToasts(t => [...t, { id, message, type }])
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 4000)
   }, [])
 
-  /* ── Filtered + sorted skills ── */
   const displayed = useMemo(() => {
     let list = store.skills.filter(s => {
-      if (tab === 'mine'      && s.seller !== wallet.publicKey)    return false
+      if (tab === 'mine'      && s.seller !== wallet.publicKey)      return false
       if (tab === 'purchases' && !store.purchasedIds.includes(s.id)) return false
-      if (cat !== 'all'       && s.cat    !== cat)                 return false
+      if (cat !== 'all'       && s.cat !== cat)                      return false
       if (search) {
         const q = search.toLowerCase()
         if (
@@ -51,7 +55,6 @@ export default function HomePage() {
     return list
   }, [store.skills, store.purchasedIds, tab, cat, search, sort, wallet.publicKey])
 
-  /* ── Actions ── */
   const openList = () => {
     if (!wallet.publicKey) { toast('Connect your wallet first', 'error'); return }
     setListOpen(true)
@@ -93,77 +96,83 @@ export default function HomePage() {
     }
   }
 
-  /* ── Derived stats ── */
-  const myListings  = store.skills.filter(s => s.seller === wallet.publicKey)
-  const sellers     = new Set(store.skills.map(s => s.seller)).size
+  const myListings = store.skills.filter(s => s.seller === wallet.publicKey)
+  const sellers    = new Set(store.skills.map(s => s.seller)).size
 
   const statsBar: { label: string; value: string | number; color: string }[] = [
-    { label: 'Skills',       value: store.skills.length,                    color: 'text-white'      },
-    { label: 'Sellers',      value: sellers,                                color: 'text-purple-400' },
-    { label: 'Volume',       value: `${store.totalVolume.toFixed(1)} SOL`,  color: 'text-green-400'  },
+    { label: 'Skills',       value: store.skills.length,                   color: 'text-white'      },
+    { label: 'Sellers',      value: sellers,                               color: 'text-purple-400' },
+    { label: 'Volume',       value: `${store.totalVolume.toFixed(1)} SOL`, color: 'text-green-400'  },
     { label: 'My listings',  value: myListings.length,                     color: 'text-yellow-400' },
     { label: 'My purchases', value: store.purchasedIds.length,             color: 'text-green-400'  },
   ]
 
-  /* ── Empty state per tab ── */
   const emptyState = {
-    all:       { icon: '🔍', title: 'No skills found', sub: 'Try adjusting your search or filters' },
-    mine:      wallet.publicKey
-                 ? { icon: '📦', title: 'No listings yet', sub: 'List your first skill and start earning SOL' }
-                 : { icon: '👻', title: 'Connect your wallet', sub: 'Connect Phantom to see your listings' },
+    all: { icon: '🔍', title: 'No skills found', sub: 'Try adjusting your search or filters' },
+    mine: wallet.publicKey
+      ? { icon: '📦', title: 'No listings yet', sub: 'List your first skill and start earning SOL' }
+      : { icon: '👻', title: 'Connect your wallet', sub: 'Connect Phantom to see your listings' },
     purchases: wallet.publicKey
-                 ? { icon: '🛒', title: 'No purchases yet', sub: 'Browse the marketplace and buy your first skill' }
-                 : { icon: '👻', title: 'Connect your wallet', sub: 'Connect Phantom to see your purchases' },
+      ? { icon: '🛒', title: 'No purchases yet', sub: 'Browse the marketplace and buy your first skill' }
+      : { icon: '👻', title: 'Connect your wallet', sub: 'Connect Phantom to see your purchases' },
   }[tab]
+
+  const switchTab = (t: Tab) => { setTab(t); setCat('all'); setSearch('') }
 
   return (
     <div className="min-h-screen">
       <Navbar
         tab={tab}
-        onTab={t => { setTab(t); setCat('all'); setSearch('') }}
+        onTab={switchTab}
         onConnect={wallet.connect}
         onError={msg => toast(msg, 'error')}
         onNew={openList}
       />
 
-      <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+      <main className="max-w-6xl mx-auto px-4 py-6 sm:py-8 space-y-5 sm:space-y-6 pb-nav sm:pb-8">
 
-        {/* Hero — marketplace tab, no active filters */}
         {tab === 'all' && !search && cat === 'all' && (
-          <div className="text-center py-10 sm:py-14 space-y-5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-[11px] font-semibold text-purple-400 uppercase tracking-widest">
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
-              Live on Solana Devnet
+          <div className="relative dot-grid rounded-2xl overflow-hidden text-center py-10 sm:py-16 px-4 space-y-4 border border-border">
+            <div className="absolute inset-0 pointer-events-none"
+              style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(153,69,255,0.06) 0%, transparent 70%)' }}
+            />
+            <div className="relative space-y-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-[11px] font-semibold text-purple-400 uppercase tracking-widest">
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
+                Live on Solana Devnet
+              </div>
+              <h1 className="text-3xl sm:text-5xl font-bold text-white tracking-tight leading-tight">
+                Web3 Skills,{' '}
+                <span className="gradient-text">Paid in SOL</span>
+              </h1>
+              <p className="text-zinc-500 text-sm sm:text-base max-w-xs sm:max-w-sm mx-auto leading-relaxed">
+                The peer-to-peer marketplace for Solana builders. Buy and sell dev skills, design, and strategy — no middlemen.
+              </p>
+              {!wallet.publicKey && (
+                <button
+                  onClick={async () => { try { await wallet.connect() } catch (e) { toast(e instanceof Error ? e.message : 'Failed', 'error') } }}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-semibold text-sm transition-all hover:scale-[1.02] shadow-lg shadow-purple-500/25"
+                >
+                  <span>👻</span> Connect Phantom to start
+                </button>
+              )}
             </div>
-            <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight leading-none">
-              Web3 Skills,{' '}
-              <span className="gradient-text">Paid in SOL</span>
-            </h1>
-            <p className="text-zinc-500 text-sm sm:text-base max-w-xs sm:max-w-sm mx-auto leading-relaxed">
-              The peer-to-peer marketplace for Solana builders. Buy and sell dev skills, design, and strategy — no middlemen.
-            </p>
-            {!wallet.publicKey && (
-              <button
-                onClick={async () => { try { await wallet.connect() } catch (e) { toast(e instanceof Error ? e.message : 'Failed', 'error') } }}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all hover:scale-[1.02] shadow-lg shadow-purple-500/20"
-              >
-                <span>👻</span> Connect Phantom to start
-              </button>
-            )}
           </div>
         )}
 
-        {/* Stats bar */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {/* Stats bar — horizontal scroll on mobile */}
+        <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide sm:grid sm:grid-cols-3 lg:grid-cols-5">
           {statsBar.map(stat => (
-            <div key={stat.label} className="bg-surface border border-border rounded-xl p-4 hover:border-zinc-700 transition-colors">
-              <p className={`font-mono text-2xl font-bold ${stat.color}`}>{stat.value}</p>
-              <p className="text-xs text-zinc-600 mt-0.5 uppercase tracking-wide">{stat.label}</p>
+            <div
+              key={stat.label}
+              className="flex-shrink-0 w-32 sm:w-auto bg-surface border border-border rounded-xl p-4 hover:border-zinc-700 transition-colors"
+            >
+              <p className={`font-mono text-xl sm:text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+              <p className="text-[10px] text-zinc-600 mt-0.5 uppercase tracking-wide">{stat.label}</p>
             </div>
           ))}
         </div>
 
-        {/* Filters (only on marketplace tab) */}
         <CategoryFilter
           active={cat}
           onChange={setCat}
@@ -173,45 +182,39 @@ export default function HomePage() {
           onSort={setSort}
         />
 
-        {/* Grid */}
         {store.loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-surface border border-border rounded-2xl h-56 animate-pulse" />
+              <div key={i} className="bg-surface border border-border rounded-2xl h-52 animate-pulse" />
             ))}
           </div>
         ) : store.error ? (
           <div className="text-center py-20">
             <p className="text-3xl mb-3">⚠️</p>
             <p className="text-zinc-500 text-sm">{store.error}</p>
-            <button onClick={store.reload} className="mt-4 text-xs text-purple-400 hover:text-purple-300 underline">
-              Try again
-            </button>
+            <button onClick={store.reload} className="mt-4 text-xs text-purple-400 hover:text-purple-300 underline">Try again</button>
           </div>
         ) : displayed.length === 0 ? (
-          <div className="text-center py-24 space-y-3">
+          <div className="text-center py-20 space-y-3">
             <p className="text-5xl">{emptyState.icon}</p>
             <p className="text-white font-semibold">{emptyState.title}</p>
-            <p className="text-zinc-500 text-sm">{emptyState.sub}</p>
+            <p className="text-zinc-500 text-sm max-w-xs mx-auto">{emptyState.sub}</p>
             {tab === 'mine' && wallet.publicKey && (
-              <button
-                onClick={openList}
-                className="mt-2 px-5 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium transition-colors"
-              >
+              <button onClick={openList} className="mt-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium transition-colors">
                 List a skill
               </button>
             )}
             {(tab === 'mine' || tab === 'purchases') && !wallet.publicKey && (
               <button
                 onClick={async () => { try { await wallet.connect() } catch (e) { toast(e instanceof Error ? e.message : 'Failed', 'error') } }}
-                className="mt-2 px-5 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium transition-colors flex items-center gap-2 mx-auto"
+                className="mt-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium transition-colors inline-flex items-center gap-2"
               >
                 <span>👻</span> Connect Phantom
               </button>
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {displayed.map(s => (
               <SkillCard
                 key={s.id}
@@ -227,20 +230,44 @@ export default function HomePage() {
 
       </main>
 
-      {/* FAB — only shown when connected */}
+      {/* Mobile bottom nav */}
+      <nav
+        className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-bg/95 backdrop-blur-2xl border-t border-border grid grid-cols-4"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
+        {MOBILE_TABS.map(t => (
+          <button
+            key={t.id}
+            onClick={() => switchTab(t.id)}
+            className={`flex flex-col items-center justify-center gap-0.5 py-3 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
+              tab === t.id ? 'text-purple-400' : 'text-zinc-600'
+            }`}
+          >
+            <span className={`text-lg leading-tight transition-transform ${tab === t.id ? 'scale-110' : ''}`}>
+              {t.icon}
+            </span>
+            {t.label}
+          </button>
+        ))}
+        <button
+          onClick={openList}
+          className="flex flex-col items-center justify-center gap-0.5 py-3 text-[10px] font-semibold uppercase tracking-wider text-zinc-600 active:text-white transition-colors"
+        >
+          <span className="w-7 h-7 rounded-full bg-purple-600 flex items-center justify-center text-white text-lg leading-none -mt-0.5">+</span>
+          List
+        </button>
+      </nav>
+
+      {/* FAB — desktop only */}
       {wallet.publicKey && (
         <button
           onClick={openList}
           title="List a skill"
-          className="fixed bottom-6 right-6 w-12 h-12 rounded-full bg-purple-600 hover:bg-purple-500 text-white text-xl shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30 transition-all hover:scale-105 flex items-center justify-center z-30"
-        >
-          +
-        </button>
+          className="hidden sm:flex fixed bottom-6 right-6 w-12 h-12 rounded-full bg-purple-600 hover:bg-purple-500 text-white text-xl shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30 transition-all hover:scale-105 items-center justify-center z-30"
+        >+</button>
       )}
 
-      {listOpen && (
-        <ListModal onClose={() => setListOpen(false)} onSubmit={handleList} />
-      )}
+      {listOpen && <ListModal onClose={() => setListOpen(false)} onSubmit={handleList} />}
 
       {selected && (
         <DetailModal

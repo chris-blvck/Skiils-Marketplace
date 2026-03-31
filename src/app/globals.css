@@ -64,3 +64,33 @@ body::before {
   background: #9945FF;
   border-radius: 1px;
 }
+
+/* Safe area helpers */
+.pb-safe  { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.pb-nav   { padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px)); }
+
+/* Dot grid for hero */
+.dot-grid {
+  background-image: radial-gradient(circle, rgba(255,255,255,0.045) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* Bottom sheet handle */
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 2px;
+  margin: 0 auto 12px;
+}
+
+/* Line clamp utility */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Smooth scroll */
+html { scroll-behavior: smooth; }

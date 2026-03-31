@@ -32,15 +32,26 @@ export function ListModal({ onClose, onSubmit }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="bg-surface border border-border rounded-2xl w-full max-w-md animate-slide-up overflow-hidden shadow-2xl">
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/70 backdrop-blur-sm animate-fade-in"
+      onClick={e => e.target === e.currentTarget && onClose()}
+    >
+      <div className="bg-surface border border-border border-b-0 sm:border-b rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md animate-slide-up overflow-hidden shadow-2xl">
 
-        <div className="flex items-center justify-between p-5 border-b border-border">
-          <h2 className="font-semibold text-white">List a Skill</h2>
-          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-white hover:bg-white/8 transition-colors text-sm">✕</button>
+        {/* Drag handle (mobile only) */}
+        <div className="pt-3 pb-0 sm:hidden flex justify-center">
+          <div className="sheet-handle" />
         </div>
 
-        <div className="p-5 space-y-4">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <h2 className="font-semibold text-white">List a Skill</h2>
+          <button
+            onClick={onClose}
+            className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-white hover:bg-white/8 transition-colors text-sm"
+          >✕</button>
+        </div>
+
+        <div className="p-5 space-y-4 overflow-y-auto max-h-[65vh] sm:max-h-none">
           <Field label="Title">
             <input className={input} placeholder="e.g. Solana Smart Contract Audit" value={form.title} onChange={e => set('title', e.target.value)} />
           </Field>
@@ -54,12 +65,25 @@ export function ListModal({ onClose, onSubmit }: Props) {
           </Field>
 
           <Field label="Description">
-            <textarea className={`${input} h-24 resize-none`} placeholder="Describe what you're offering, deliverables, timeline..." value={form.description} onChange={e => set('description', e.target.value)} />
+            <textarea
+              className={`${input} h-24 resize-none`}
+              placeholder="Describe what you're offering, deliverables, timeline..."
+              value={form.description}
+              onChange={e => set('description', e.target.value)}
+            />
           </Field>
 
           <Field label="Price">
             <div className="relative">
-              <input className={`${input} pr-14`} type="number" step="0.01" min="0.001" placeholder="0.50" value={form.price} onChange={e => set('price', e.target.value)} />
+              <input
+                className={`${input} pr-14`}
+                type="number"
+                step="0.01"
+                min="0.001"
+                placeholder="0.50"
+                value={form.price}
+                onChange={e => set('price', e.target.value)}
+              />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono font-bold text-green-400">SOL</span>
             </div>
           </Field>
@@ -69,11 +93,15 @@ export function ListModal({ onClose, onSubmit }: Props) {
           </Field>
         </div>
 
-        <div className="flex gap-3 p-5 border-t border-border">
-          <button onClick={onClose} className="px-4 py-2.5 rounded-xl border border-border text-zinc-400 hover:text-white text-sm transition-colors">
+        <div className="flex gap-3 p-5 border-t border-border pb-safe sm:pb-5">
+          <button onClick={onClose} className="px-4 py-3 rounded-xl border border-border text-zinc-400 hover:text-white text-sm transition-colors">
             Cancel
           </button>
-          <button onClick={submit} disabled={loading} className="flex-1 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2">
+          <button
+            onClick={submit}
+            disabled={loading}
+            className="flex-1 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+          >
             {loading ? <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : '🚀'}
             Publish
           </button>
@@ -92,4 +120,4 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   )
 }
 
-const input = 'w-full bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-white placeholder-zinc-600 outline-none focus:border-zinc-600 transition-colors'
+const input = 'w-full bg-bg border border-border rounded-xl px-3 py-3 text-sm text-white placeholder-zinc-600 outline-none focus:border-zinc-600 transition-colors'
