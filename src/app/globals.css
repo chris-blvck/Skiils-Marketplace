@@ -94,3 +94,21 @@ body::before {
 
 /* Smooth scroll */
 html { scroll-behavior: smooth; }
+
+/* Shimmer skeleton */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #111114 25%, #1C1C22 50%, #111114 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+/* Staggered fade-in for grid items */
+.stagger { animation: fadeIn 0.4s ease both; }
+
+/* Hover reveal utility */
+.hover-reveal { opacity: 0; transition: opacity 0.2s ease; }
+.group:hover .hover-reveal { opacity: 1; }

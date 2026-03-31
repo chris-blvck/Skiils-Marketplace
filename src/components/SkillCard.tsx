@@ -9,9 +9,10 @@ interface Props {
   isMine: boolean
   onClick: () => void
   onDelete?: () => Promise<void>
+  style?: React.CSSProperties
 }
 
-export function SkillCard({ skill, isPurchased, isMine, onClick, onDelete }: Props) {
+export function SkillCard({ skill, isPurchased, isMine, onClick, onDelete, style }: Props) {
   const cat = CATEGORIES.find(c => c.id === skill.cat) ?? CATEGORIES[0]
   const ref = useRef<HTMLDivElement>(null)
   const [deleting, setDeleting] = useState(false)
@@ -20,7 +21,7 @@ export function SkillCard({ skill, isPurchased, isMine, onClick, onDelete }: Pro
   const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const r = ref.current!.getBoundingClientRect()
     ref.current!.style.setProperty('--x', `${((e.clientX - r.left) / r.width * 100).toFixed(1)}%`)
-    ref.current!.style.setProperty('--y', `${((e.clientY - r.top)  / r.height * 100).toFixed(1)}%`)
+    ref.current!.style.setProperty('--y', `${((e.clientY - r.top) / r.height * 100).toFixed(1)}%`)
   }
 
   const handleDelete = async (e: React.MouseEvent) => {
@@ -34,24 +35,22 @@ export function SkillCard({ skill, isPurchased, isMine, onClick, onDelete }: Pro
     <div
       ref={ref}
       onMouseMove={onMouseMove}
-      className="group relative bg-surface border border-border rounded-2xl p-5 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-700 hover:shadow-xl hover:shadow-black/40 flex flex-col gap-3 overflow-hidden"
-      style={{ '--x': '50%', '--y': '50%' } as React.CSSProperties}
+      style={{ '--x': '50%', '--y': '50%', ...style } as React.CSSProperties}
       onClick={onClick}
+      className="stagger group relative bg-surface border border-border rounded-2xl p-5 cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:border-zinc-700 hover:shadow-2xl hover:shadow-black/50 flex flex-col gap-3 overflow-hidden"
     >
       {/* Mouse glow */}
       <div
         className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"
-        style={{ background: 'radial-gradient(circle at var(--x) var(--y), rgba(153,69,255,0.07), transparent 60%)' }}
+        style={{ background: 'radial-gradient(circle at var(--x) var(--y), rgba(153,69,255,0.08), transparent 55%)' }}
       />
 
-      {/* Status badge */}
+      {/* Status badges */}
       {isPurchased && !isMine && (
         <span className="absolute top-3 right-3 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-green-500/10 text-green-400 border border-green-500/20 tracking-wide">
           PURCHASED
         </span>
       )}
-
-      {/* My listing controls */}
       {isMine && (
         <div className="absolute top-3 right-3 flex items-center gap-1.5">
           <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 tracking-wide">
@@ -64,7 +63,7 @@ export function SkillCard({ skill, isPurchased, isMine, onClick, onDelete }: Pro
               className="w-5 h-5 flex items-center justify-center rounded bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 transition-colors disabled:opacity-40 text-[10px]"
               title="Remove listing"
             >
-              {deleting ? '…' : '✕'}
+              {deleting ? '\u2026' : '\u2715'}
             </button>
           )}
         </div>
@@ -79,8 +78,10 @@ export function SkillCard({ skill, isPurchased, isMine, onClick, onDelete }: Pro
       </div>
 
       {/* Content */}
-      <div>
-        <h3 className="text-sm font-semibold text-white leading-snug mb-1.5">{skill.title}</h3>
+      <div className="flex-1">
+        <h3 className="text-sm font-semibold text-white leading-snug mb-1.5 group-hover:text-purple-100 transition-colors">
+          {skill.title}
+        </h3>
         <p className="text-xs text-zinc-500 leading-relaxed line-clamp-2">{skill.description}</p>
       </div>
 
@@ -92,13 +93,23 @@ export function SkillCard({ skill, isPurchased, isMine, onClick, onDelete }: Pro
               #{t}
             </span>
           ))}
+          {skill.tags.length > 3 && (
+            <span className="text-[10px] font-mono text-zinc-700 px-1">+{skill.tags.length - 3}</span>
+          )}
         </div>
       )}
 
       {/* Footer */}
       <div className="flex items-center justify-between mt-auto pt-3 border-t border-border">
         <span className="font-mono text-base font-bold text-green-400">{skill.price} SOL</span>
-        <span className="font-mono text-[10px] text-zinc-600">{short(skill.seller)}</span>
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-[10px] text-zinc-700 group-hover:opacity-0 transition-opacity">
+            {short(skill.seller)}
+          </span>
+          <span className="hover-reveal text-xs font-medium text-purple-400 flex items-center gap-1">
+            View <span className="text-[10px]">&rarr;</span>
+          </span>
+        </div>
       </div>
     </div>
   )
