@@ -16,7 +16,7 @@ export function SkillCard({ skill, isPurchased, isMine, onClick, onDelete, style
   const cat = CATEGORIES.find(c => c.id === skill.cat) ?? CATEGORIES[0]
   const ref = useRef<HTMLDivElement>(null)
   const [deleting, setDeleting] = useState(false)
-  const short = (s: string) => `${s.slice(0, 4)}...${s.slice(-4)}`
+  const short = (s: string) => `${s.slice(0, 4)}\u2026${s.slice(-4)}`
 
   const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const r = ref.current!.getBoundingClientRect()
@@ -37,31 +37,30 @@ export function SkillCard({ skill, isPurchased, isMine, onClick, onDelete, style
       onMouseMove={onMouseMove}
       style={{ '--x': '50%', '--y': '50%', ...style } as React.CSSProperties}
       onClick={onClick}
-      className="stagger group relative bg-surface border border-border rounded-2xl p-5 cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:border-zinc-700 hover:shadow-2xl hover:shadow-black/50 flex flex-col gap-3 overflow-hidden"
+      className="stagger card-glow group relative bg-[#0F0F13] border border-white/[0.07] rounded-2xl p-5 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-2xl hover:shadow-purple-900/20 flex flex-col gap-3.5 overflow-hidden"
     >
-      {/* Mouse glow */}
+      {/* Mouse-tracking inner glow */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"
-        style={{ background: 'radial-gradient(circle at var(--x) var(--y), rgba(153,69,255,0.08), transparent 55%)' }}
+        className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl"
+        style={{ background: 'radial-gradient(circle at var(--x) var(--y), rgba(153,69,255,0.10), transparent 50%)' }}
       />
 
       {/* Status badges */}
       {isPurchased && !isMine && (
-        <span className="absolute top-3 right-3 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-green-500/10 text-green-400 border border-green-500/20 tracking-wide">
-          PURCHASED
+        <span className="absolute top-3.5 right-3.5 text-[10px] font-bold px-2 py-0.5 rounded-md bg-green-500/10 text-green-400 border border-green-500/20 tracking-widest uppercase">
+          Purchased
         </span>
       )}
       {isMine && (
-        <div className="absolute top-3 right-3 flex items-center gap-1.5">
-          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 tracking-wide">
-            YOURS
+        <div className="absolute top-3.5 right-3.5 flex items-center gap-1.5">
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20 tracking-widest uppercase">
+            Yours
           </span>
           {onDelete && (
             <button
               onClick={handleDelete}
               disabled={deleting}
-              className="w-5 h-5 flex items-center justify-center rounded bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 transition-colors disabled:opacity-40 text-[10px]"
-              title="Remove listing"
+              className="w-5 h-5 flex items-center justify-center rounded-md bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 transition-colors disabled:opacity-40 text-[10px]"
             >
               {deleting ? '\u2026' : '\u2715'}
             </button>
@@ -69,45 +68,48 @@ export function SkillCard({ skill, isPurchased, isMine, onClick, onDelete, style
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex items-start justify-between">
+      {/* Top: emoji + category */}
+      <div className="flex items-center gap-2.5">
         <span className="text-2xl">{cat.emoji}</span>
-        <span className="text-[10px] font-semibold text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded uppercase tracking-wider mr-16">
+        <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-[0.15em]">
           {cat.label}
         </span>
       </div>
 
-      {/* Content */}
-      <div className="flex-1">
-        <h3 className="text-sm font-semibold text-white leading-snug mb-1.5 group-hover:text-purple-100 transition-colors">
+      {/* Title + description */}
+      <div className="flex-1 space-y-1.5">
+        <h3 className="text-sm font-semibold text-white leading-snug group-hover:text-purple-100 transition-colors line-clamp-2">
           {skill.title}
         </h3>
-        <p className="text-xs text-zinc-500 leading-relaxed line-clamp-2">{skill.description}</p>
+        <p className="text-xs text-zinc-600 leading-relaxed line-clamp-2">{skill.description}</p>
       </div>
 
       {/* Tags */}
       {skill.tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {skill.tags.slice(0, 3).map(t => (
-            <span key={t} className="text-[10px] font-mono text-zinc-600 bg-white/[0.04] border border-white/[0.06] rounded px-1.5 py-0.5">
+            <span key={t} className="text-[10px] font-mono text-zinc-700 bg-white/[0.03] border border-white/[0.05] rounded-md px-2 py-0.5 group-hover:border-white/[0.08] transition-colors">
               #{t}
             </span>
           ))}
           {skill.tags.length > 3 && (
-            <span className="text-[10px] font-mono text-zinc-700 px-1">+{skill.tags.length - 3}</span>
+            <span className="text-[10px] font-mono text-zinc-800">+{skill.tags.length - 3}</span>
           )}
         </div>
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between mt-auto pt-3 border-t border-border">
-        <span className="font-mono text-base font-bold text-green-400">{skill.price} SOL</span>
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-[10px] text-zinc-700 group-hover:opacity-0 transition-opacity">
+      <div className="flex items-center justify-between pt-3.5 border-t border-white/[0.06] mt-auto">
+        <div>
+          <span className="font-mono text-lg font-black text-white">{skill.price}</span>
+          <span className="font-mono text-xs font-bold text-green-400 ml-1.5">SOL</span>
+        </div>
+        <div className="relative h-5 overflow-hidden">
+          <span className="font-mono text-[10px] text-zinc-700 absolute inset-0 flex items-center justify-end group-hover:opacity-0 transition-opacity">
             {short(skill.seller)}
           </span>
-          <span className="hover-reveal text-xs font-medium text-purple-400 flex items-center gap-1">
-            View <span className="text-[10px]">&rarr;</span>
+          <span className="text-xs font-semibold text-purple-400 absolute inset-0 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity gap-1">
+            View details <span>\u2192</span>
           </span>
         </div>
       </div>
