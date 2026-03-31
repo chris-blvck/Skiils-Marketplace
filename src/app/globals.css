@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+* { box-sizing: border-box; }
+
+html { -webkit-font-smoothing: antialiased; }
+
+body {
+  background: #09090B;
+  color: #FAFAFA;
+}
+
+/* Hide scrollbar but keep scroll */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Custom scrollbar for modals */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #27272A; border-radius: 2px; }
+
+/* Tailwind doesn't include bg-white/4 and bg-white/8 by default in some setups */
+.bg-white\/4  { background-color: rgba(255,255,255,0.04); }
+.bg-white\/8  { background-color: rgba(255,255,255,0.08); }
+.border-white\/6 { border-color: rgba(255,255,255,0.06); }
+
+/* Ambient gradient on background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 40% at 10% 0%, rgba(153,69,255,0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 30% at 90% 100%, rgba(20,241,149,0.03) 0%, transparent 50%);
+  z-index: 0;
+}
+
+#__next, main { position: relative; z-index: 1; }
+
+/* Gradient text utility */
+.gradient-text {
+  background: linear-gradient(135deg, #9945FF 0%, #14F195 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glow underline on nav active tab */
+.tab-active {
+  position: relative;
+}
+.tab-active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 2px;
+  background: #9945FF;
+  border-radius: 1px;
+}
