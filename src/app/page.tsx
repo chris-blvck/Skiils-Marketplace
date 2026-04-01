@@ -1,4 +1,7 @@
 'use client'
+// Force dynamic rendering — page needs wallet + Supabase at runtime
+export const dynamic = 'force-dynamic'
+
 import { useState, useCallback, useMemo } from 'react'
 import type { Category, Sort, Tab, Toast, Skill } from '@/types'
 import { useWallet }        from '@/hooks/useWallet'
@@ -12,9 +15,9 @@ import { DetailModal }      from '@/components/DetailModal'
 import { ToastContainer }   from '@/components/Toast'
 
 const MOBILE_TABS: { id: Tab; icon: string; label: string }[] = [
-  { id: 'all',       icon: '✦',  label: 'Market'    },
-  { id: 'mine',      icon: '📦', label: 'Store'     },
-  { id: 'purchases', icon: '🛒', label: 'Purchases' },
+  { id: 'all',       icon: '\u2726',  label: 'Market'    },
+  { id: 'mine',      icon: '\ud83d\udce6', label: 'Store'     },
+  { id: 'purchases', icon: '\ud83d\uded2', label: 'Purchases' },
 ]
 
 export default function HomePage() {
@@ -67,7 +70,7 @@ export default function HomePage() {
       const skill = await insertSkill({ ...data, tags, seller: wallet.publicKey })
       store.addSkill(skill)
       setListOpen(false)
-      toast('Skill published! 🚀', 'success')
+      toast('Skill published! \ud83d\ude80', 'success')
     } catch (e) {
       toast(e instanceof Error ? e.message : 'Failed to publish', 'error')
     }
@@ -108,13 +111,13 @@ export default function HomePage() {
   ]
 
   const emptyState = {
-    all: { icon: '🔍', title: 'No skills found', sub: 'Try adjusting your search or filters' },
+    all: { icon: '\ud83d\udd0d', title: 'No skills found', sub: 'Try adjusting your search or filters' },
     mine: wallet.publicKey
-      ? { icon: '📦', title: 'No listings yet', sub: 'List your first skill and start earning SOL' }
-      : { icon: '👻', title: 'Connect your wallet', sub: 'Connect Phantom to see your listings' },
+      ? { icon: '\ud83d\udce6', title: 'No listings yet', sub: 'List your first skill and start earning SOL' }
+      : { icon: '\ud83d\udc7b', title: 'Connect your wallet', sub: 'Connect Phantom to see your listings' },
     purchases: wallet.publicKey
-      ? { icon: '🛒', title: 'No purchases yet', sub: 'Browse the marketplace and buy your first skill' }
-      : { icon: '👻', title: 'Connect your wallet', sub: 'Connect Phantom to see your purchases' },
+      ? { icon: '\ud83d\uded2', title: 'No purchases yet', sub: 'Browse the marketplace and buy your first skill' }
+      : { icon: '\ud83d\udc7b', title: 'Connect your wallet', sub: 'Connect Phantom to see your purchases' },
   }[tab]
 
   const switchTab = (t: Tab) => { setTab(t); setCat('all'); setSearch('') }
@@ -132,65 +135,83 @@ export default function HomePage() {
       <main className="max-w-6xl mx-auto px-4 py-6 sm:py-8 space-y-5 sm:space-y-6 pb-nav sm:pb-8">
 
         {tab === 'all' && !search && cat === 'all' && (
-          <div className="relative dot-grid rounded-2xl overflow-hidden text-center py-10 sm:py-16 px-4 space-y-4 border border-border">
-            <div className="absolute inset-0 pointer-events-none"
-              style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(153,69,255,0.06) 0%, transparent 70%)' }}
-            />
-            <div className="relative space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-[11px] font-semibold text-purple-400 uppercase tracking-widest">
-                <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
-                Live on Solana Devnet
-              </div>
-              <h1 className="text-3xl sm:text-5xl font-bold text-white tracking-tight leading-tight">
-                Web3 Skills,{' '}
-                <span className="gradient-text">Paid in SOL</span>
-              </h1>
-              <p className="text-zinc-500 text-sm sm:text-base max-w-xs sm:max-w-sm mx-auto leading-relaxed">
-                The peer-to-peer marketplace for Solana builders. Buy and sell dev skills, design, and strategy — no middlemen.
-              </p>
-              {!wallet.publicKey && (
-                <button
-                  onClick={async () => { try { await wallet.connect() } catch (e) { toast(e instanceof Error ? e.message : 'Failed', 'error') } }}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-semibold text-sm transition-all hover:scale-[1.02] shadow-lg shadow-purple-500/25"
-                >
-                  <span>👻</span> Connect Phantom to start
-                </button>
-              )}
+          <section className="relative text-center pt-8 pb-4 sm:pt-14 sm:pb-8 overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none overflow-hidden -mx-4">
+              <div className="orb-pulse absolute -top-20 left-1/4 w-[480px] h-[480px] bg-purple-600/10 rounded-full blur-[80px]" />
+              <div className="orb-pulse-delay absolute -bottom-20 right-1/4 w-[320px] h-[320px] bg-green-500/8 rounded-full blur-[60px]" />
             </div>
-          </div>
+            <div className="relative space-y-5 sm:space-y-6">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
+                <span className="text-[11px] font-bold text-purple-300 uppercase tracking-[0.15em]">Live \u00b7 Solana Devnet</span>
+              </div>
+              <h1 className="text-[2.6rem] sm:text-[4.5rem] lg:text-[5.5rem] font-black text-white tracking-[-0.03em] leading-[0.92]">
+                The Skills Market<br />
+                <span className="gradient-text">for Web3 Builders</span>
+              </h1>
+              <p className="text-zinc-500 text-sm sm:text-base max-w-sm mx-auto leading-relaxed">
+                Buy and sell dev skills, design & strategy.<br className="hidden sm:block" />
+                Paid in SOL. No fees. No middlemen.
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
+                {!wallet.publicKey ? (
+                  <button
+                    onClick={async () => { try { await wallet.connect() } catch (e) { toast(e instanceof Error ? e.message : 'Failed', 'error') } }}
+                    className="inline-flex items-center gap-2.5 px-7 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-bold text-sm transition-all hover:scale-[1.03] shadow-xl shadow-purple-500/25"
+                  >
+                    <span>\ud83d\udc7b</span> Connect Phantom
+                  </button>
+                ) : (
+                  <button
+                    onClick={openList}
+                    className="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition-all hover:scale-[1.02]"
+                  >
+                    <span className="text-base font-black">+</span> List your skill
+                  </button>
+                )}
+                <div className="flex items-center gap-2 text-zinc-700 text-xs font-mono">
+                  <span className="w-1 h-1 rounded-full bg-zinc-700" />
+                  {store.skills.length} skills \u00b7 {new Set(store.skills.map(s => s.seller)).size} sellers
+                </div>
+              </div>
+            </div>
+          </section>
         )}
 
-        {/* Stats bar — horizontal scroll on mobile */}
-        <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide sm:grid sm:grid-cols-3 lg:grid-cols-5">
+        {/* Stats bar \u2014 horizontal scroll on mobile */}
+        <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide sm:grid sm:grid-cols-3 lg:grid-cols-5">
           {statsBar.map(stat => (
             <div
               key={stat.label}
-              className="flex-shrink-0 w-32 sm:w-auto bg-surface border border-border rounded-xl p-4 hover:border-zinc-700 transition-colors"
+              className="flex-shrink-0 w-[130px] sm:w-auto bg-[#0F0F13] border border-white/[0.06] rounded-xl p-4 hover:border-white/[0.10] transition-colors"
             >
-              <p className={`font-mono text-xl sm:text-2xl font-bold ${stat.color}`}>{stat.value}</p>
-              <p className="text-[10px] text-zinc-600 mt-0.5 uppercase tracking-wide">{stat.label}</p>
+              <p className={`font-mono text-xl sm:text-2xl font-black ${stat.color}`}>{stat.value}</p>
+              <p className="text-[10px] text-zinc-700 mt-1 uppercase tracking-[0.12em] font-medium">{stat.label}</p>
             </div>
           ))}
         </div>
 
-        <CategoryFilter
-          active={cat}
-          onChange={setCat}
-          search={search}
-          onSearch={setSearch}
-          sort={sort}
-          onSort={setSort}
-        />
+        {/* Sticky filter bar */}
+        <div className="sticky top-14 z-30 -mx-4 px-4 py-3 bg-[#08080A]/85 backdrop-blur-xl border-b border-white/[0.04]">
+          <CategoryFilter
+            active={cat}
+            onChange={setCat}
+            search={search}
+            onSearch={setSearch}
+            sort={sort}
+            onSort={setSort}
+          />
+        </div>
 
         {store.loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-surface border border-border rounded-2xl h-52 animate-pulse" />
+              <div key={i} className="skeleton rounded-2xl h-52" />
             ))}
           </div>
         ) : store.error ? (
           <div className="text-center py-20">
-            <p className="text-3xl mb-3">⚠️</p>
+            <p className="text-3xl mb-3">\u26a0\ufe0f</p>
             <p className="text-zinc-500 text-sm">{store.error}</p>
             <button onClick={store.reload} className="mt-4 text-xs text-purple-400 hover:text-purple-300 underline">Try again</button>
           </div>
@@ -209,13 +230,13 @@ export default function HomePage() {
                 onClick={async () => { try { await wallet.connect() } catch (e) { toast(e instanceof Error ? e.message : 'Failed', 'error') } }}
                 className="mt-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium transition-colors inline-flex items-center gap-2"
               >
-                <span>👻</span> Connect Phantom
+                <span>\ud83d\udc7b</span> Connect Phantom
               </button>
             )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            {displayed.map(s => (
+            {displayed.map((s, i) => (
               <SkillCard
                 key={s.id}
                 skill={s}
@@ -223,6 +244,7 @@ export default function HomePage() {
                 isMine={s.seller === wallet.publicKey}
                 onClick={() => setSelected(s)}
                 onDelete={s.seller === wallet.publicKey ? () => handleDelete(s.id) : undefined}
+                style={{ animationDelay: `${i * 40}ms`, animationFillMode: 'both' } as React.CSSProperties}
               />
             ))}
           </div>
@@ -232,7 +254,7 @@ export default function HomePage() {
 
       {/* Mobile bottom nav */}
       <nav
-        className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-bg/95 backdrop-blur-2xl border-t border-border grid grid-cols-4"
+        className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-[#08080A]/95 backdrop-blur-2xl border-t border-white/[0.06] grid grid-cols-4"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         {MOBILE_TABS.map(t => (
@@ -258,7 +280,7 @@ export default function HomePage() {
         </button>
       </nav>
 
-      {/* FAB — desktop only */}
+      {/* FAB \u2014 desktop only */}
       {wallet.publicKey && (
         <button
           onClick={openList}
